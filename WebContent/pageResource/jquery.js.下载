@@ -1,0 +1,155 @@
+/**
+ * Created by 9020MT on 14-11-13.
+ */
+define(['jquery-org'], function () {
+    var _width;
+    function setCookie(c_name, value, expiredays) {
+        var exdate = new Date()
+        exdate.setDate(exdate.getDate() + expiredays)
+        document.cookie = c_name + "=" + escape(value) + ";path=/" +
+            ((expiredays == null) ? "" : ";expires=" + exdate.toGMTString())
+    }
+    function getCookie(c_name) {
+        if (document.cookie.length > 0) {
+            c_start = document.cookie.indexOf(c_name + "=")
+            if (c_start != -1) {
+                c_start = c_start + c_name.length + 1
+                c_end = document.cookie.indexOf(";", c_start)
+                if (c_end == -1) c_end = document.cookie.length
+                return unescape(document.cookie.substring(c_start, c_end))
+            }
+        }
+        return ""
+    }
+    $(document).ready(function () {
+        _width = $(window).width() - 200;
+        $(window).resize(function () {
+            _width = $(window).width() - 200;
+        });
+
+        $(window).scroll(function () {
+            var _top = $(document).scrollTop();
+            if (_top > 70) {
+                $(".fix_panel").addClass("quick_action_fix").css("width", _width);
+            }
+            else {
+                $(".fix_panel").removeClass("quick_action_fix");
+            }
+        }).trigger("scroll");
+
+        $(".user_status .more").click(function () {
+            $(".user_status p").toggle()
+        });
+
+        $(".dropdown").click(function () {
+            if ($(this).is('.open')) {
+                $(this).removeClass("open");
+
+            }
+            else {
+                $(this).addClass("open");
+            }
+        });
+        $('.set').on('click', function() {
+            //$('#mainSet').toggle('normal');
+            $("#mainSet").toggle("slide", {
+                direction : "right"
+            }, 300);
+        });
+        //自定义显示模块
+        $('#menuSave').on('click', function() {
+            var checked = $('#mainSet').find(':checked');
+            if (checked.length < 1) {
+                $.Showmsg('至少保留一个菜单');
+                return false;
+            }
+            var ids = [];
+            checked.each(function(k, v) {
+                ids.push($(v).val());
+            })
+            setCookie('ids', ids);
+            $.Showmsg('设置成功！');
+            setTimeout("location.href='/'", 500);
+        });
+        $('#menuCancel').on('click', function() {
+            $("#mainSet").toggle("slide", {
+                direction : "right"
+            }, 300);
+        });
+        $(".product-navbar-collapse").click(function () {
+            if ($(".viewFramework-product").is('.viewFramework-product-col-1')) {
+                setCookie('open', 0, 99999);
+                $(".viewFramework-product").removeClass("viewFramework-product-col-1");
+
+            }
+            else {
+                setCookie('open', 1, 99999);
+                $(".viewFramework-product").addClass("viewFramework-product-col-1");
+            }
+        });
+
+        $(".sidebar-fold").click(function () {
+            if ($(this).is('.icon-fold')) {
+                $(this).removeClass("icon-fold").addClass("icon-unfold");
+                setCookie('parentOpen', 1);
+                $(".viewFramework-body").removeClass("viewFramework-sidebar-mini").addClass("viewFramework-sidebar-full");
+            }
+            else {
+                setCookie('parentOpen', 0);
+                $(this).removeClass("icon-unfold").addClass("icon-fold");
+                $(".viewFramework-body").removeClass("viewFramework-sidebar-full").addClass("viewFramework-sidebar-mini");
+            }
+        });
+
+
+        //$(".viewFramework-sidebar").mouseover(function(){
+        //    $(".sidebar-fold").removeClass("icon-fold").addClass("icon-unfold");
+        //    $(".viewFramework-body").removeClass("viewFramework-sidebar-mini").addClass("viewFramework-sidebar-full");
+        //});
+
+        //$(".viewFramework-sidebar").mouseout(function(){
+        //    $(".sidebar-fold").removeClass("icon-unfold").addClass("icon-fold");
+        //    $(".viewFramework-body").removeClass("viewFramework-sidebar-full").addClass("viewFramework-sidebar-mini");
+        //});
+        //自定义显示字段
+        $('#menu_save').on('click', function() {
+            var checked = $('#mainMenu').find(':checked');
+            var extChecked = $('#extension').find(':checked');
+            if (checked.length < 1 && extChecked.length < 1) {
+                $.Showmsg('至少保留一个字段');
+                return false;
+            }
+            var main = [];
+            var ext = [];
+            if(typeof cookiePre == 'undefined' || !cookiePre) {
+                return;
+            }
+            if (checked.length > 0) {
+                checked.each(function (k, v) {
+                    main.push($(v).val());
+                })
+                setCookie(cookiePre + 'menu', main, 99999);
+            } else {
+                setCookie(cookiePre + 'menu', '');
+            }
+            if (extChecked.length > 0) {
+                extChecked.each(function (k, v) {
+                    ext.push($(v).val());
+                });
+                setCookie(cookiePre + 'ext_menu', ext, 99999);
+            } else {
+                setCookie(cookiePre + 'ext_menu', '');
+            }
+            $.Showmsg('设置成功！');
+            setTimeout("location.reload()", 500);
+        });
+        $('#menu_cancel').on('click', function() {
+            $('#menu-setting').toggle('normal');
+        });
+        $('#set').on('click', function () {
+            $('#menu-setting').toggle('normal');
+        });
+    });
+    return $;
+})
+;

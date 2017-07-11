@@ -1,0 +1,458 @@
+/**
+ * Created by Administrator on 2016/9/28 0028.
+ */
+
+require([
+    'jquery',
+    'widgets/FileUpload',
+    'IDValidator',
+    'jquery-form',
+    'datepicker-config',
+    'art-dialog',
+    'widgets/jquery.combo.select',
+    'validForm'
+], function($, FileUpload, IDValidator) {
+    var isSubmit = false;
+    var globalAjaxData = {
+        'ajax': '1'
+    };
+    var csrf = window.csrf;
+    if (csrf) {
+        globalAjaxData[csrf.name] = csrf.value;
+    }
+    $.ajaxSetup({
+        type: 'POST',
+        data: globalAjaxData
+    });
+    /*修改*/
+    $('#top').click(function(){
+        $('body').animate( {scrollTop: 0}, 500);
+    });
+    $('select[class!="licenseType"]').comboSelect();
+    $('.setOrder').on('click', function () {
+        var order = $(this).data('value');
+        order == 1 ? $('#order').val(2) : $('#order').val(1);
+        order == 1 ? $('.setOrder').removeClass('fa-arrow-down').addClass('fa-arrow-up') : $('.setOrder').removeClass('fa-arrow-up').addClass('fa-arrow-down');
+        $('.searchDiv').submit();
+    });
+    $('#addForm').Validform({
+        'callback':function(data) {
+            $.Showmsg(data.retMsg);
+            if (data.retCode == 0) {
+                $.Showmsg('保存成功！');
+                setTimeout(function(){
+                    location.href="/affiliated/list";
+                }, 1000);
+            } else {
+                $.Showmsg(data.retMsg);
+            }
+        },
+        'beforeSubmit' : function() {
+            if ($('input[name="idNo"]').length == 1) {
+                //if (!IDValidator.isValid($('input[name="idNo"]').val())) {
+                //    $.Showmsg('身份证号错误');
+                //    return false;
+                //}
+            }
+            $.Showmsg('提交中...');
+        }
+    });
+    $.datepicker.setDefaults({
+        changeMonth: true,
+        changeYear: true,
+        dateFormat: 'yy-mm-dd',
+        monthNamesShort: ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'],
+        dayNames: ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'],
+        dayNamesShort: ['周日','周一','周二','周三','周四','周五','周六'],
+        dayNamesMin: ['日','一','二','三','四','五','六']
+    });
+    /*修改*/
+    $('#edit').click(function(){
+        if($('input[name="driver"]:checked').length < 1) {
+            $.Showmsg('请选择列表中的车辆进行操作！');
+            return false;
+        }
+        var id = $('input[name="driver"]:checked').data('car-id');
+        window.location.href="/affiliated/edit?id=" + id;
+    });
+
+    /*车辆添加*/
+    $('#addCar').click(function(){
+        if($('input[name="driver"]:checked').length < 1) {
+            $.Showmsg('请选择列表中的车辆进行操作！');
+            return false;
+        }
+        var id = $('input[name="driver"]:checked').val();
+        window.location.href="/affiliated/addCar?id=" + id;
+    });
+
+    /**
+     * 附件上传到七牛
+     */
+    new FileUpload('#upload', {
+        max_file_size: '100mb',
+        pathPrefix: 'assets/',
+        uploadType: 'pdf,jpg,docx,doc,xlsx,xlsm,xls,zip,rar,png,jpeg',
+        token_url: '/uptoken/imgPdf',
+        linkUrl: '/uptoken/file?url=',
+        uploaded: function (imgSrc, context) {
+            $("input[name='attachmentUrl']").val(imgSrc);//路径
+            var fileName = context.options.originName.split(".");
+            $("input[name='fileName']").val(fileName[0]);//文件名
+        },
+        deleteFunc: function () {
+            $("input[name='attachmentUrl']").val('');//路径
+            $("input[name='fileName']").val('');//文件名
+        }
+    });
+    new FileUpload('#upload1', {
+        max_file_size: '100mb',
+        pathPrefix: 'assets/',
+        uploadType: 'pdf,jpg,docx,doc,xlsx,xlsm,xls,zip,rar,png,jpeg',
+        token_url: '/uptoken/imgPdf',
+        linkUrl: '/uptoken/file?url=',
+        uploaded: function (imgSrc, context) {
+            $("input[name='fileUrl']").val(imgSrc);//路径
+            var fileName = context.options.originName.split(".");
+            $("input[name='fileName']").val(fileName[0]);//文件名
+        },
+        deleteFunc: function () {
+            $("input[name='fileUrl']").val('');//路径
+            $("input[name='fileName']").val('');//文件名
+        }
+    });
+    new FileUpload('#upload2', {
+        max_file_size: '100mb',
+        pathPrefix: 'assets/',
+        uploadType: 'pdf,jpg,docx,doc,xlsx,xlsm,xls,zip,rar,png,jpeg',
+        token_url: '/uptoken/imgPdf',
+        linkUrl: '/uptoken/file?url=',
+        uploaded: function (imgSrc, context) {
+            $("input[name='photoUrl']").val(imgSrc);//路径
+            var fileName = context.options.originName.split(".");
+            $("input[name='fileName']").val(fileName[0]);//文件名
+        },
+        deleteFunc: function () {
+            $("input[name='photoUrl']").val('');//路径
+            $("input[name='fileName']").val('');//文件名
+        }
+    });
+    new FileUpload('#upload3', {
+        max_file_size: '100mb',
+        pathPrefix: 'assets/',
+        uploadType: 'pdf,jpg,docx,doc,xlsx,xlsm,xls,zip,rar,png,jpeg',
+        token_url: '/uptoken/imgPdf',
+        linkUrl: '/uptoken/file?url=',
+        uploaded: function (imgSrc, context) {
+            $("input[name='otherUrl']").val(imgSrc);//路径
+            var fileName = context.options.originName.split(".");
+            $("input[name='fileName']").val(fileName[0]);//文件名
+        },
+        deleteFunc: function () {
+            $("input[name='otherUrl']").val('');//路径
+            $("input[name='fileName']").val('');//文件名
+        }
+    });
+    /*证件登记*/
+    $('#license').click(function() {
+        if($('input[name="driver"]:checked').length < 1) {
+            $.Showmsg('请选择列表中的车辆进行操作！');
+            return false;
+        }
+        $('#licenseForm').find('input[name="driverId"]').val($('input[name="driver"]:checked').val());
+        $('#licenseForm').find('input[name="carId"]').val($('input[name="driver"]:checked').data('car-id'));
+        $('#licenseForm').dialog({
+            'title': '证件登记',
+            'showBgDiv' : true,
+            'width' : '500px',
+            'content': $(this).html(),
+            'lock': true
+        });
+        $('.addForm').Validform({
+            'beforeSubmit' : function() {
+                if ($('#dealTime').val() > $('#endTime').val()) {
+                    $('#dealTime').gips({text : '挂靠办理日期不能大于结束日期！'});
+                    return false;
+                }
+                $('.driverId').val(driverId);
+            },
+            'callback':function(data) {
+                $.Showmsg(data.retMsg);
+                if (data.retCode == 0) {
+                    $.Showmsg('证件登记成功！');
+                    location.reload();
+                } else {
+                    $.Showmsg(data.retMsg);
+                }
+            }
+        });
+        $('.btn_back').click(function(){
+            $('.aui_close').trigger('click');
+        });
+    });
+
+    /*挂靠到期管理*/
+    $('#period').click(function() {
+        if($('input[name="driver"]:checked').length < 1) {
+            $.Showmsg('请选择列表中的车辆进行操作！');
+            return false;
+        }
+        var carIds = [];
+        $('input[name="driver"]:checked').each(function(k, v) {
+            carIds.push($(v).data('car-id'));
+        })
+        $('#affiliated').dialog({
+            'title': '合约到期管理',
+            'showBgDiv' : true,
+            'width' : '500px',
+            'content': $(this).html(),
+            'lock': true
+        });
+        $('.periodForm').Validform({
+            'beforeSubmit' : function() {
+                if ($('#dealDate').val() > $('#endDate').val()) {
+                    $.Showmsg('登记日期不能大于结束日期！');
+                    return false;
+                }
+                $('.periodForm .carId').val(carIds.join(','));
+            },
+            'callback':function(data) {
+                $.Showmsg(data.retMsg);
+                if (data.retCode == 0) {
+                    $.Showmsg('保存成功！');
+                    location.reload();
+                } else {
+                    $.Showmsg(data.retMsg);
+                }
+            }
+        });
+        $('.btn_back').click(function(){
+            $('.aui_close').trigger('click');
+        });
+    });
+
+    /*挂靠注销*/
+    $('#cancel').click(function() {
+        if($('input[name="driver"]:checked').length < 1) {
+            $.Showmsg('请选择列表中的车辆进行操作！');
+            return false;
+        }
+        var carIds = [];
+        $('input[name="driver"]:checked').each(function(k, v) {
+            carIds.push($(v).data('car-id'));
+        });
+        $('#affCancel').dialog({
+            'title': '车辆注销',
+            'showBgDiv' : true,
+            'content': $(this).html(),
+            'lock': true
+        });
+        $('.cancelForm').Validform({
+            beforeSubmit : function() {
+                $('.cancelForm .carId').val(carIds.join(','));
+            },
+            callback:function(data) {
+                $.Showmsg(data.retMsg);
+                if (data.retCode == 0) {
+                    $.Showmsg('保存成功！');
+                    location.reload();
+                } else {
+                    $.Showmsg(data.retMsg);
+                }
+            }
+        });
+        $('.btn_back').click(function(){
+            $('.aui_close').trigger('click');
+        })
+    });
+
+    /*保险登记*/
+    $('#insure').click(function() {
+        if($('input[name="driver"]:checked').length < 1) {
+            $.Showmsg('请选择列表中的车辆进行操作！');
+            return false;
+        }
+        var carId = $('input[name="driver"]:checked').data('car-id');
+        $('#insureMod').dialog({
+            'title': '保险登记',
+            'content': $(this).html(),
+            'width' : '800px',
+            'lock': true,
+            'showBgDiv' : true
+        });
+        $('.insureForm').Validform({
+            'beforeSubmit' : function() {
+                if ($('#start').val() > $('#end').val()) {
+                    $.Showmsg('办理日期不能大于结束日期！');
+                    return false;
+                }
+                $('.insureForm .carId').val(carId);
+                $('.insureForm .driverId').val($('input[name="driver"]:checked').val());
+            },
+            'callback':function(data) {
+                $.Showmsg(data.retMsg);
+                if (data.retCode == 0) {
+                    $.Showmsg('保存成功！');
+                    location.reload();
+                } else {
+                    $.Showmsg(data.retMsg);
+                }
+            }
+        });
+        $('.btn_back').click(function(){
+            $('.ui-dialog-titlebar-close').trigger('click');
+        })
+    });
+
+    $('.btn_reset ').click(function() {
+        $(".searchDiv input").attr('value', '');
+        $('.searchDiv').find('select').find('option:selected').attr("selected", false);
+    });
+
+    $('#driverByMobile').click(function () {
+        var mobile = $('input[name="mobile"]').val();
+        if (!mobile.match(/^13[0-9]{9}$|14[0-9]{9}$|15[0-9]{9}$|18[0-9]{9}$|17[0-9]{9}$/)) {
+            $('input[name="mobile"]').gips({text :'请填写正确的手机号码'});
+            return false;
+        }
+        $.ajax({
+            url: '/affiliated/getDriverInfo',
+            type: 'post',
+            data: {
+                mobile: mobile
+            },
+            success: function (data) {
+                if (data.retCode == 0) {
+                    $('input[name="name"]').val(data.retData.name);
+                    $('#drivingLicense').siblings('.combo-dropdown').find('li[data-value="'+data.retData.drivingLicense+'"]').trigger('click');
+                    $('input[name="idNo"]').val(data.retData.idNo);
+                    $('input[name="addr"]').val(data.retData.addr);
+                    $('input[name="emergencyContact"]').val(data.retData.emergencyContact);
+                    $('input[name="emergencyMobile"]').val(data.retData.emergencyMobile);
+                }
+                else
+                {
+                    $.Showmsg('没有查找到司机信息,请继续填写其它信息！');
+                }
+            }
+        });
+    });
+
+    /*导入车辆*/
+    $('#import').click(function() {
+        $('#importMod').dialog({
+            'title': '导入车辆',
+            'width' : '620px',
+            'lock': true,
+            'showBgDiv' : true
+        });
+
+        $('.btn_back').click(function(){
+            $('.ui-dialog-titlebar-close').trigger('click');
+        })
+    });
+
+    var options = {
+        type: 'post',
+        dataType: 'json',
+        beforeSubmit: checkForm,  // pre-submit callback
+        success: submitSuccess,  // post-submit callback
+        timeout: 600000
+    };
+
+    $("#addImportBtn").click(function(){
+        $(".importForm").ajaxSubmit(options);
+        $.Showmsg('提交中...');
+        return false;
+    });
+
+    function checkForm(formData, jqForm, options) {
+        var imgPath = $("#uploadFile").val();
+        if (imgPath == "") {
+            $.Showmsg("请选择上传文件！");
+            return false;
+        }
+        return true;
+    }
+
+    function submitSuccess(data){
+        if (data.retCode == 0) {
+            $.Showmsg(data.retMsg);
+            var html = "车辆总共导入:" + data.retData.count + " 条记录<br>" + data.retData.errorHtml;
+            $(".msgImport").html(html);
+            $("#uploadFile").val("");
+            location.reload();
+        } else {
+            $.Showmsg(data.retMsg);
+            return false;
+        }
+    }//end function
+
+
+    $(".btn-slide").click(function(){
+        $(this).parents(".add_mod").children("#p1").slideToggle("slow");
+        $(this).toggleClass("active");
+        if($(this).is(".active"))
+        {
+            $(this).parent(".sidebar-title-icon").addClass("icon-arrow-down");
+            $(this).parent(".sidebar-title-icon").removeClass("icon-arrow-up");
+            $(this).html("展开更多内容");
+        }
+        else
+        {
+            $(this).parent(".sidebar-title-icon").addClass("icon-arrow-up");
+            $(this).parent(".sidebar-title-icon").removeClass("icon-arrow-down");
+            $(this).html("收起");
+        }
+        return false;
+    });
+
+    /*通过车牌号查询关联车牌号*/
+    $('#relevantCarNoByCarNo').click(function () {
+        var carNo = $('input[name="carNo"]').val();
+        var area = $('select[name="area"]').val();
+        var carNom = area+carNo+'挂';
+        $.ajax({
+            url: '/affiliated/getRelevantByCarNo',
+            type: 'post',
+            data: {
+                carNom: carNom
+            },
+            success: function (data) {
+                if (data.retCode == 0) {
+                    //$('input[name="relevantCarNo"]').val(data.retData.carNo.substr(1));
+                    //$('select[name="area1"] option:selected').val(data.retData.carNo.substr(0,1));
+                    $.Showmsg('查找到关联车牌号为：'+data.retData.carNo);
+                }
+                else
+                {
+                    $.Showmsg('没有查找到关联车牌号,请手动填写！');
+                }
+            }
+        });
+    });
+
+    $('#relevantByCarNo').click(function () {
+        var carNo = $('input[name="carNo"]').val();
+        var area = $('select[name="area"]').val();
+        var carNom = area+carNo;
+        //alert(carNom);die();
+        $.ajax({
+            url: '/affiliated/getRelevantByCarNo',
+            type: 'post',
+            data: {
+                carNom: carNom
+            },
+            success: function (data) {
+                if (data.retCode == 0) {
+                    $.Showmsg('查找到关联车牌号为：'+data.retData.carNo);
+                }
+                else
+                {
+                    $.Showmsg('没有查找到关联车牌号,请手动填写！');
+                }
+            }
+        });
+    });
+
+});
